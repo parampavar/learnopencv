@@ -1,32 +1,68 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.16)
+project(VideoStabilization LANGUAGES CXX)
 
-PROJECT(VideoStabilization)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-######################## EDIT IF REQUIRED ####################
-# If CMake is not able to find the path to OpenCV installation then 
-# uncomment the line below and specify the path to OpenCV directory 
-# (i.e. the path to the OpenCVConfig.cmake file). Check the examples given below.
-#SET(OpenCV_DIR Enter-the-path-of-OpenCV-installation-on-your-system)
+find_package(OpenCV REQUIRED
+  COMPONENTS core highgui imgproc video videoio)
+if(OpenCV_VERSION VERSION_LESS 4 OR OpenCV_VERSION VERSION_GREATER_EQUAL 6)
+  message(FATAL_ERROR
+    "This example targets OpenCV 4.14 and 5.0, not ${OpenCV_VERSION}")
+endif()
 
+# OpenCV 5 split APIs used here out of their OpenCV 4 modules:
+# estimateAffinePartial2D moved from calib3d to geometry, and
+# goodFeaturesToTrack moved from imgproc to features.
+if(OpenCV_VERSION VERSION_LESS 5)
+  find_package(OpenCV REQUIRED COMPONENTS calib3d)
+else()
+  find_package(OpenCV REQUIRED COMPONENTS features geometry)
+endif()
 
-################### OpenCV_DIR Examples  #####################
+add_executable(video_stabilization video_stabilization.cpp)
+target_include_directories(video_stabilization PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(video_stabilization PRIVATE ${OpenCV_LIBS})
+target_compile_definitions(video_stabilization
+  PRIVATE VIDEO_STABILIZATION_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-### MACOS : /usr/local/Cellar/opencv/3.4.3/share/OpenCV/
+if(MSVC)
+  target_compile_options(video_stabilization PRIVATE /W4 /WX)
+else()
+  target_compile_options(video_stabilization
+    PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
 
-### UBUNTU : /usr/local/share/OpenCV/
+include(CTest)
+if(BUILD_TESTING)
+  add_test(
+    NAME video_stabilization_regression
+    COMMAND video_stabilization
+      --output-dir "${CMAKE_CURRENT_BINARY_DIR}/test-output"
+      --no-display
+      --validate)
+  set_tests_properties(video_stabilization_regression PROPERTIES
+    PASS_REGULAR_EXPRESSION
+      "VALIDATION PASSED: 1321 frames, 1440x480, mean tracked points 1[0-9][0-9]")
 
-### WINDOWS : C:\Users\yourname\Documents\opencv-3.4.3\build\install
+  set(collision_input
+    "${CMAKE_CURRENT_BINARY_DIR}/collision-input.mp4")
+  add_test(
+    NAME video_stabilization_collision_setup
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+      "${CMAKE_CURRENT_SOURCE_DIR}/video.mp4"
+      "${collision_input}")
+  set_tests_properties(video_stabilization_collision_setup PROPERTIES
+    FIXTURES_SETUP collision_input)
 
-##############################################################
-
-#############  Common Instructions for all Users  ############
-find_package( OpenCV REQUIRED )
-
-include_directories( ${OpenCV_INCLUDE_DIRS})
-
-MACRO(add_example name)
-  ADD_EXECUTABLE(${name} ${name}.cpp)
-  TARGET_LINK_LIBRARIES(${name} ${OpenCV_LIBS})
-ENDMACRO()
-
-add_example(video_stabilization)
+  add_test(
+    NAME video_stabilization_collision_guard
+    COMMAND "${CMAKE_COMMAND}"
+      "-DEXECUTABLE=$<TARGET_FILE:video_stabilization>"
+      "-DINPUT=${collision_input}"
+      "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_collision_guard.cmake")
+  set_tests_properties(video_stabilization_collision_guard PROPERTIES
+    FIXTURES_REQUIRED collision_input)
+endif()
