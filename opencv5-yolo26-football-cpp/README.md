@@ -1,4 +1,7 @@
-# OpenCV 5 + YOLO26 Football: Detection, Team Split, Pose & Segmentation (C++, CPU)
+# OpenCV 5 + YOLO26 Football: Detection, Team Split, Pose & Segmentation
+
+![OpenCV 5 + YOLO26 football vision in C++](opencv5-cpp-football-vision-thumbnail.jpg)
+
 
 Companion code for the LearnOpenCV post on running **YOLO26** through the
 **OpenCV 5 DNN module** in **C++**, on the **CPU**. This is Part 2 of the series
@@ -129,3 +132,27 @@ exported model, since the ONNX input shape is static.
   just a little slower than an MSVC build.
 - Labels read "player" and "ball" (a football-friendly display-name mapping); the
   underlying COCO classes are unchanged.
+
+  ---
+
+<p align="center">
+  <a href="https://bigvision.ai/">
+    <img src="https://bigvision.ai/logos/logo.png" alt="BigVision.AI" width="300">
+  </a>
+</p>
+
+<h2 align="center">Build Production-Ready Computer Vision &amp; AI Solutions</h2>
+
+<p align="center">
+  LearnOpenCV is maintained by <a href="https://bigvision.ai/"><strong>BigVision.AI</strong></a>, a computer vision and AI consulting company. We help organizations design, build, optimize, and deploy production-ready AI solutions. Our team has deep expertise in computer vision, deep learning, multimodal AI, and edge deployment, with experience solving complex technical challenges across industries.
+</p>
+
+<p align="center">
+  Have a project in mind? Talk with our expert AI solution builders.
+</p>
+
+<p align="center">
+  <a href="https://bigvision.ai/expert-ai-solution-builders?utm_source=locv-github">
+    <img src="https://img.shields.io/badge/Get%20in%20Touch-087EA4?style=for-the-badge" alt="Get in Touch with BigVision.AI">
+  </a>
+</p>
